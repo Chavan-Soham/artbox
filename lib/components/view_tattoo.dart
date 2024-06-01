@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-
 import 'package:flutter/cupertino.dart';
 
 class ViewTattoo extends StatelessWidget {
@@ -9,21 +8,14 @@ class ViewTattoo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: Text('View Tattoo'),
+    return CupertinoPageScaffold(
+      navigationBar: const CupertinoNavigationBar(
+        middle: Text('Generated Tattoo'),
       ),
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // You can display the image if needed for debugging purposes
-            // Image.memory(imageBytes),
-            Text(
-              'Tattoo with transparent background is ready!',
-              style: TextStyle(fontSize: 18.0, color: CupertinoColors.black),
-            ),
-          ],
+        child: Image.memory(
+          imageBytes,
+          fit: BoxFit.contain,
         ),
       ),
     );
