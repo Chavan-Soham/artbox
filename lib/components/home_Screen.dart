@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = false;
   String? _errorMessage;
 
-  final OpenAIService openAIService = OpenAIService('sk-proj-fQOo2JThyYnnz7QUGK4vT3BlbkFJIdNvFDwt5vPOkSE29acm'); // Replace with your OpenAI API key
+  final OpenAIService openAIService = OpenAIService(''); // Replace with your OpenAI API key
 
   Future<void> _generateTattoo(String prompt) async {
     setState(() {
