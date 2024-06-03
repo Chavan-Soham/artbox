@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
@@ -5,8 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:artbox/openai_service.dart';
+import 'package:path_provider/path_provider.dart';
 import 'edit_tattoo_screen.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -80,6 +84,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+
+
   void _showImageSourceActionSheet() {
     showCupertinoModalPopup<void>(
       context: context,
@@ -110,6 +116,44 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  Future<void> _saveImage(Uint8List bytes) async {
+  try {
+    // Request permission to save in gallery
+    final status = await Permission.storage.request();
+    if (status.isGranted) {
+      // Get the application documents directory
+      final directory = await getApplicationDocumentsDirectory();
+      // Create a unique file name
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.png';
+      // Create the file path
+      final filePath = '${directory.path}/$fileName';
+      // Save the file
+      final file = await File(filePath).writeAsBytes(bytes);
+
+      // Save to gallery
+      final result = await ImageGallerySaver.saveFile(file.path);
+      if (result['isSuccess']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Image saved to gallery!')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save image!')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Storage permission denied!')),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $e')),
+    );
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -186,6 +230,22 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   ),
 ),
+CupertinoButton.filled(
+  onPressed: () {
+    if (_generatedImageBytes != null) {
+      _saveImage(_generatedImageBytes!);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No image to save!')),
+      );
+    }
+  },
+  child: Text(
+    'Download',
+    style: GoogleFonts.jetBrainsMono(),
+  ),
+),
+
 
                     const SizedBox(height: 20.0),
                     if (_isLoading) const CircularProgressIndicator(),
