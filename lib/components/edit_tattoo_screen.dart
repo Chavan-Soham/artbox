@@ -15,7 +15,15 @@ class EditTattooScreen extends StatefulWidget {
 class _EditTattooScreenState extends State<EditTattooScreen> {
   Uint8List? _selectedPhotoBytes;
   final List<_EditableImage> _draggableItems = [];
-  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    // Add the initial image bytes to the toolbar but not to the background
+    if (widget.imageBytes.isNotEmpty) {
+      _draggableItems.add(_EditableImage(widget.imageBytes));
+    }
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -29,7 +37,7 @@ class _EditTattooScreenState extends State<EditTattooScreen> {
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error: $e';
+        print('Error: $e');
       });
     }
   }
@@ -47,13 +55,16 @@ class _EditTattooScreenState extends State<EditTattooScreen> {
       ),
       child: Stack(
         children: [
+          Positioned.fill(
+            child: Container(
+              color: Colors.white,
+            ),
+          ),
           if (_selectedPhotoBytes != null)
             Positioned.fill(
-              top: 30.0,
               child: Image.memory(
                 _selectedPhotoBytes!,
-                  fit: BoxFit.fill,
-                  width: 200.0,
+                fit: BoxFit.cover,
               ),
             ),
           ..._draggableItems.map((item) => _buildEditableImage(item)).toList(),
@@ -64,20 +75,7 @@ class _EditTattooScreenState extends State<EditTattooScreen> {
               height: 100,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _draggableItems.add(_EditableImage(widget.imageBytes));
-                      });
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Image.memory(widget.imageBytes, width: 80, height: 80),
-                    ),
-                  ),
-                  // Add more widgets here if needed
-                ],
+                children: _buildToolbarItems(),
               ),
             ),
           ),
@@ -86,25 +84,70 @@ class _EditTattooScreenState extends State<EditTattooScreen> {
     );
   }
 
-  Widget _buildEditableImage(_EditableImage item) {
-    return Positioned(
-      left: item.offset.dx,
-      top: item.offset.dy,
-      child: GestureDetector(
-        onScaleUpdate: (details) {
+  List<Widget> _buildToolbarItems() {
+    return [
+      GestureDetector(
+        onTap: () {
           setState(() {
-            item.offset += details.focalPointDelta;
-            item.scale = details.scale;
+            _draggableItems.add(_EditableImage(widget.imageBytes));
           });
         },
-        child: Transform(
-          transform: Matrix4.identity()
-            ..translate(item.offset.dx, item.offset.dy)
-            ..scale(item.scale),
-          child: Image.memory(
-            item.bytes,
-            width: 100,
-            height: 100,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Image.memory(widget.imageBytes, width: 80, height: 80),
+        ),
+      ),
+      GestureDetector(
+        onTap: () async {
+          final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+          if (pickedFile != null) {
+            final bytes = await pickedFile.readAsBytes();
+            setState(() {
+              _selectedPhotoBytes = bytes;
+            });
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Icon(Icons.photo, size: 80, color: Colors.white),
+        ),
+      ),
+    ];
+  }
+
+  Widget _buildEditableImage(_EditableImage item) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+  // Calculate the adjusted position to keep the image within the visible area
+  final adjustedLeft = item.offset.dx.clamp(-800.0, screenWidth - 100.0); // 100.0 is the width of the image
+  final adjustedTop = item.offset.dy.clamp(0.0, screenHeight - 100.0); 
+    return Positioned(
+      left: 0,
+      top: adjustedTop,
+      width: screenWidth,
+      child: GestureDetector(
+        onPanUpdate: (details) {
+          setState(() {
+            item.offset += details.delta;
+          });
+        },
+        child: Container(
+          constraints: BoxConstraints(
+            minHeight: screenHeight, // Adjusted to screen height
+            minWidth: screenWidth,
+            maxWidth: double.infinity,
+            maxHeight: double.infinity,
+          ),
+          child: InteractiveViewer(
+            transformationController: item.transformationController,
+            boundaryMargin: EdgeInsets.all(double.infinity),
+            minScale: 0.1,
+            maxScale: 10.0,
+            child: Image.memory(
+              item.bytes,
+              fit: BoxFit.contain,
+            ),
           ),
         ),
       ),
@@ -147,6 +190,14 @@ class _EditableImage {
   Uint8List bytes;
   Offset offset;
   double scale;
+  TransformationController transformationController;
 
-  _EditableImage(this.bytes, {this.offset = const Offset(50, 50), this.scale = 1.0});
+  _EditableImage(this.bytes, {this.offset = const Offset(50, 50), this.scale = 1.0})
+      : transformationController = TransformationController();
+}
+
+void main() {
+  runApp(CupertinoApp(
+    home: EditTattooScreen(imageBytes: Uint8List(0)), // Replace Uint8List(0) with your initial image bytes
+  ));
 }

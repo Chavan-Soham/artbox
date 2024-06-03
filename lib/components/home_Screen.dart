@@ -118,11 +118,22 @@ class _HomeScreenState extends State<HomeScreen> {
     const double padding = 16.0;
 
     return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: Text('Artbox', style: TextStyle(color: Color.fromARGB(255, 224, 2, 120)),),
+        backgroundColor: Color.fromARGB(255, 241, 253, 0),
+         leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Image.asset(
+            'assets/images/logo-removebg.png', // Replace with your image asset path
+            height: 30.0, // Adjust the height as needed
+          ),
+        ),
+      ),
       child: Stack(
         children: [
           Positioned.fill(
             child: Image.asset(
-              'assets/images/home.jpg',
+              'assets/images/nasa.jpg',
               fit: BoxFit.fill,
             ),
           ),
@@ -152,18 +163,30 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 20.0),
-                    CupertinoButton.filled(
-                      onPressed: () {
-                        final prompt = _controller.text;
-                        if (prompt.isNotEmpty) {
-                          _generateTattoo(prompt);
-                        }
-                      },
-                      child: Text(
-                        'Generate',
-                        style: GoogleFonts.jetBrainsMono(),
-                      ),
-                    ),
+                    CupertinoButton(
+  padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 50.0),
+  onPressed: () {
+    final prompt = _controller.text;
+    if (prompt.isNotEmpty) {
+      _generateTattoo(prompt);
+    }
+  },
+  child: Container(
+    decoration: BoxDecoration(
+      color: Color.fromARGB(255, 241, 112, 0),
+      borderRadius: BorderRadius.circular(8.0),
+    ),
+    padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 50.0),
+    child: Text(
+      'Generate',
+      style: GoogleFonts.jetBrainsMono(
+        color: CupertinoColors.white,
+        fontSize: 18.0,
+      ),
+    ),
+  ),
+),
+
                     const SizedBox(height: 20.0),
                     if (_isLoading) const CircularProgressIndicator(),
                     if (_errorMessage != null)
