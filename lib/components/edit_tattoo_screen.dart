@@ -4,9 +4,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 
 class EditTattooScreen extends StatefulWidget {
-  final Uint8List imageBytes;
+  Uint8List imageBytes;
 
-  const EditTattooScreen({super.key, required this.imageBytes});
+  EditTattooScreen({super.key, required this.imageBytes});
 
   @override
   State<EditTattooScreen> createState() => _EditTattooScreenState();
@@ -45,8 +45,10 @@ class _EditTattooScreenState extends State<EditTattooScreen> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
+      backgroundColor: const Color.fromARGB(255, 87, 0, 0),
       navigationBar: CupertinoNavigationBar(
-        middle: const Text('Edit Tattoo'),
+        middle: const Text('Edit Tattoo with your pic'),
+        backgroundColor: Color.fromARGB(255, 208, 255, 1),
         trailing: CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: () => _showImageSourceActionSheet(),
@@ -103,7 +105,8 @@ class _EditTattooScreenState extends State<EditTattooScreen> {
           if (pickedFile != null) {
             final bytes = await pickedFile.readAsBytes();
             setState(() {
-              _selectedPhotoBytes = bytes;
+              widget.imageBytes = bytes;
+              _draggableItems.add(_EditableImage(widget.imageBytes));
             });
           }
         },
